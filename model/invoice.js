@@ -20,6 +20,9 @@ class Invoice{
 			this.dueDate = data.duedate;
 			this.invoiceItems = data.invoiceitems;
 			this.total = data.total;
+			this.merchantEmail = data.merchantEmail;
+			this.status = "pending";
+			this.creationDate = (new Date()).toISOString();
 		}		
 	}
 }

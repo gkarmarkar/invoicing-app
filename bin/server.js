@@ -7,7 +7,7 @@
 var app = require('../app');
 var debug = require('debug')('invoicing-app:server');
 var http = require('http');
-
+var dbConnection = require('../db')();
 /**
  * Get port from environment and store in Express.
  */
@@ -25,9 +25,18 @@ var server = http.createServer(app);
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
+var callback = function(err, db) {
+  if(!err) {
+      server.listen(port);
+      server.on('error', onError);
+      server.on('listening', onListening);
+  }else {
+    console.error('DB unavailable');
+  }
+
+}
+
+dbConnection.setConnection(callback);
 
 /**
  * Normalize a port into a number, string, or false.
