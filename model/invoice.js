@@ -17,8 +17,8 @@ class Invoice{
 		if(!!data){
 			this.name = data.name;
 			this.email = data.email;
-			this.dueDate = data.duedate;
-			this.invoiceItems = data.invoiceitems;
+			this.dueDate = data.dueDate;
+			this.invoiceItems = data.invoiceItems;
 			this.total = data.total;
 			this.merchantEmail = data.merchantEmail;
 			this.status = "pending";

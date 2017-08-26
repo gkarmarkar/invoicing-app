@@ -2,15 +2,11 @@ var Validator=require("../../lib/validate");
 var InvoiceModel = require("../../model/invoice");
 var mongoose = require("../../db")();
 
-console.log("MONGOSE "+JSON.stringify(mongoose));
-
-
 module.exports = function(logger){
 
 
 	var validate = Validator(logger);
 	var createInvoice = function(req,res){
-
 		var result= validate.validate(req.body);
 		
 		if(!!result && result.status === 'success'){
@@ -22,10 +18,17 @@ module.exports = function(logger){
 			invoiceDBHandler.create(model,function(err,invoice){
 
 				if(!err){
-					return res.status(200).send(model);
+					return res.status(200).send({
+						'status': 'success',
+						'message': 'Invoice sent successfully'
+					});
 				}
 				else{
-					return res.status(400).send(err);
+					return res.status(400).send({
+						'status': 'error',
+						'message': 'Failed to send invoice',
+						'error': err
+					});
 				}
 			});
 
@@ -34,8 +37,9 @@ module.exports = function(logger){
 			logger.log('error', result.details);		
 			
 			res.status(400).send({
-				'error': 'Problem occured!',
-				'details': result.details
+				'status': 'error',
+				'message': result.details,
+				'error': result
 			})
 		}	
 

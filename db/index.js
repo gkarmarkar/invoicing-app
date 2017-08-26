@@ -1,6 +1,7 @@
 //var MongoClient = require('mongodb').MongoClient
 var Mongoose = require('mongoose');
 var DBHandler = require('./schema')(Mongoose);
+var logger = require("winston");
 var DB;
 
 module.exports = function(){
@@ -19,7 +20,7 @@ module.exports = function(){
                        });
   
           promise.then(function(db){
-            console.log("Connected mongoDB correctly");
+            logger.log("info","Connected mongoDB correctly");
             DB = db;
             letServerKnow(null, db);
           }).catch(function(error){
