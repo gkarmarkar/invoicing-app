@@ -1,0 +1,57 @@
+//resets
+html , body {
+	wight: 100%;
+	height: 100%;	
+}
+
+
+//bootstrap overrides
+#root .invoice-form {
+	font-size: 1.6rem;
+
+	.form-control {
+		height: 4rem;
+		font-size: 1.5rem;
+	}
+	.form-group {
+		label {
+			//font-size: 1.6rem;
+    		font-weight: normal;    		
+		}
+	}
+
+	.total {
+		margin-bottom: 2rem;
+		text-align: right;
+		
+		.total-text {
+			margin-right: 1rem;
+		}
+		.currency {
+			margin-right: 0.2rem;
+		}
+	}
+	.total-send {
+		margin-right: 2rem;
+	}
+}
+
+@media (min-width: 1200px) {
+    .container{
+        max-width: 670px;
+        margin-top: 10rem;
+
+        .form-group label {
+    		line-height: 2.5;
+    	}    
+    }
+}
+
+@media only screen 
+    and (max-device-width: 640px), 
+    only screen and (max-device-width: 667px), 
+    only screen and (max-width: 480px) {
+	.container {
+		margin-top: 2rem;
+	}
+}

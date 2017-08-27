@@ -1,8 +1,9 @@
 'use strict';
-
+import './invoice.scss';
 import React from 'react';
 import InvoiceFormList from '../../components/invoice-form-list/index.jsx';
-
+import Input from 'react-toolbox/lib/input';
+import {Button, IconButton} from 'react-toolbox/lib/button';
 
 export default class Home extends React.Component {
   constructor(props) {
@@ -18,23 +19,29 @@ export default class Home extends React.Component {
           description:"",
           amount:0.00
         }
-      ]
-
+      ],
+      errorTxt:""
     }
   }
+
   
   doSomething(e){
     e.preventDefault();
 
     var requestBody=this.state;
     requestBody.dueDate=(new Date(requestBody.dueDate)).toISOString();
-
+    console.log('--========>>>>> ');
     $.post("http://localhost:3000/api/v1/invoice/create",requestBody)
     .done(function(data){//update the UI
     })
-    .fail(function(err){
+    .fail((err)=>{
       //Update the UI
-      console.log('Error ', err);
+      var errMsg=err.responseJSON.message.message;
+      console.log("this was errMsg ", errMsg);
+      requestBody.errorTxt=errMsg;
+      console.log('Error !!!! ', requestBody.errorTxt);
+      this.setState({"errorTxt":requestBody.errorTxt});
+         
     });
   } 
 
@@ -44,34 +51,49 @@ export default class Home extends React.Component {
     };
    
     return(
-      <div id="homeView" key="homeView">
-        <form onSubmit={this.doSomething.bind(this)}>
-          <div>
-            <label for="customername">Name</label>
-            <input type="text" id="customer-name" name="customer-name" placeholder="Name of customer" 
-            value={this.state.name} onChange={(e)=>{this.onChangeHandler(e)}}/>
+      <div className="container invoice-form">
+        <div className="errorBox">{this.state.errorTxt}</div>
+        <form className="" onSubmit={this.doSomething.bind(this)}>
+          <div className="form-group row">
+            <label htmlFor="customer-name" className="col-md-2 col-form-label">Name</label>
+            <div className="col-md-7">
+               <input className="form-control" type="text" id="customer-name" 
+                    name="customer-name" placeholder="Name of customer" 
+                value={this.state.name} onChange={(e)=>{this.onChangeHandler(e)}}/>
+            </div>          
           </div>
-          <div>
-            <label for="customeremail">Email</label>
-            <input type="email" id="customer-email" name="customer-email" placeholder="Email"
-            value={this.state.email} onChange={(e)=>{this.onChangeHandler(e)}}/>
+
+          <div className="form-group row">
+            <label htmlFor="customer-email" className="col-md-2 col-form-label">Email</label>
+            <div className="col-md-7">
+              <input className="form-control" type="email" id="customer-email" name="customer-email" placeholder="Email"
+                value={this.state.email} onChange={(e)=>{this.onChangeHandler(e)}}/>    
+            </div>
           </div>
-          <div>
-            <label for="duedate">Due Date</label>
-            <input type="date" id="due-date" name="due-date"
-            value={this.state.dueDate} onChange={(e)=>{this.onChangeHandler(e)}}/>
+
+          <div className="form-group row">
+            <label htmlFor="due-date" className="col-md-2 col-form-label">Due Date</label>
+            <div className="col-md-7">
+              <input className="form-control" type="date" id="due-date" name="due-date"
+                 value={this.state.dueDate} onChange={(e)=>{this.onChangeHandler(e)}}/>          
+            </div>
           </div>
+
          <InvoiceFormList list={this.state.invoiceItems} 
                           addInvoiceItem={this.addInvoiceItem.bind(this)} 
                           removeInvoiceItem={this.removeInvoiceItem.bind(this)}
                           changeNotifier={changeNotifierHandler}/>
-      
-          <div>
-            <span>Total</span>
-            <span className="currency">$</span>
-            <span>{this.state.total}</span>
+          <div className="total-send">
+            <div className="total">
+                <strong className="total-text">TOTAL</strong>
+                <span className="currency">$</span>
+                <span>{this.state.total}</span>
+            </div>
+            <div className="pull-right">
+              <Button label='Send' type="submit" raised primary />
+            </div>
           </div>
-          <input type="submit" value="Submit"/>
+
         </form>
       </div>
     );

@@ -1,6 +1,5 @@
 import webpack  from 'webpack';
 import path     from 'path';
-
 const assetsDir       = path.resolve(__dirname, 'public/assets');
 const nodeModulesDir  = path.resolve(__dirname, 'node_modules');
 
@@ -23,19 +22,33 @@ let config = {
       test: /\.jsx?$/,
       loader: 'babel-loader',
       exclude: [nodeModulesDir]
-    }, {
-      test: /\.scss$/,
-      loader: 'sass-loader'
-    }, {
-      test: /\.css$/,
-      loader: 'css-loader'
-    }, {
+    },
+      //{test: /(\.css)$/, loaders: ['style', 'css']},
+      {test: /\.css$/,
+      use: [
+        'style-loader',
+        {
+          loader: 'css-loader',
+          options: {
+            modules: true,
+            sourceMap: true,
+            importLoaders: 1,
+            localIdentName: "[name]--[local]--[hash:base64:8]"
+          },          
+        },
+        'postcss-loader'
+      ]      
+    },
+      {test: /\.scss$/, loaders: ['style-loader', 'css-loader', 'sass-loader']},
+    {
       test: /\.json$/,
       loader: 'json'
-    }, {
+    }, 
+    {
       test: /\.(eot|woff|woff2|ttf|svg|png|jpe?g|gif)(\?\S*)?$/,
       loader: 'url?limit=100000@name=[name][ext]'
-    }]
+    }
+    ]
   },
   plugins: [
     getImplicitGlobals()

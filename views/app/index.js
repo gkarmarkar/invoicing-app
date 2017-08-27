@@ -5,10 +5,11 @@ import React                from 'react';
 import ReactDOM             from 'react-dom';
 import Invoice  from '../pages/invoice/index.jsx';
 
-// import 'animate.css';
+//import 'animate.css';
 import 'jquery';
-// import 'font-awesome/css/font-awesome.min.css';
-// import 'bootstrap/dist/js/bootstrap.min.js';
+//import 'bootstrap/dist/css/bootstrap.css';
+//import 'font-awesome/css/font-awesome.min.css';
+//import 'bootstrap/dist/js/bootstrap.min.js';
 // import './style/customBootstrap/style.css';
 
 const ELEMENT_TO_BOOTSTRAP  = 'root';
