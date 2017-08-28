@@ -20,6 +20,8 @@ export default class Home extends React.Component {
       return {
         name:"",
         email:"",
+        //this should be coming from a login session or something, hardcoding for now..
+        merchantEmail:"defaultmerchant@test.com",
         dueDate:"",
         total:0.00,
         invoiceItems:[

@@ -1,7 +1,6 @@
 import React from "react";
 import './invoice-typeahead-list.scss';
 
-
 export default class TypeAheadList extends React.Component{
 
 	constructor(props){

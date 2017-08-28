@@ -12,7 +12,7 @@ module.exports = function(logger){
 		if(!!result && result.status === 'success'){
 			var model = new InvoiceModel(req.body);
 			//Hardcoding merchant email for now, ideally should get from merchant login
-			model.merchantEmail = "johndoe@test.com";
+			//model.merchantEmail = "johndoe@test.com";
 
 			var invoiceDBHandler=mongoose.getDB();
 			invoiceDBHandler.create(model,function(err,invoice){
@@ -45,7 +45,7 @@ module.exports = function(logger){
 
 	}
 
-	var getInvoice = function(req,res){
+	var getHelperText = function(req,res){
 
 		//validate if the GET api call was legit
 		var resultGet= validate.validateGet(req.query);
@@ -81,6 +81,6 @@ module.exports = function(logger){
 	
 	return {
 		"create": createInvoice,
-		"find"	: getInvoice
+		"find"	: getHelperText
 	}
 };

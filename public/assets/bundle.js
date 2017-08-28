@@ -59490,6 +59490,8 @@ var Home = function (_React$Component) {
       return {
         name: "",
         email: "",
+        //this should be coming from a login session or something, hardcoding for now..
+        merchantEmail: "defaultmerchant@test.com",
         dueDate: "",
         total: 0.00,
         invoiceItems: [{
@@ -60073,7 +60075,6 @@ var InvoiceFormList = function (_React$Component) {
 		key: 'deleteItemClickHandler',
 		value: function deleteItemClickHandler(e, index) {
 			e.preventDefault();
-			console.log(index);
 			this.props.removeInvoiceItem(index);
 		}
 	}]);
@@ -62769,6 +62770,10 @@ module.exports = function (logger) {
 				"type": "string",
 				"format": "email"
 			},
+			"merchantEmail": {
+				"type": "string",
+				"format": "email"
+			},
 			"dueDate": {
 				"type": "string",
 				"format": "future-valid-date"
@@ -62779,7 +62784,8 @@ module.exports = function (logger) {
 				"items": {
 					"properties": {
 						"description": {
-							"type": "string"
+							"type": "string",
+							"format": "descriptionCheck"
 						},
 						"amount": {
 							"type": "string",
@@ -62795,7 +62801,7 @@ module.exports = function (logger) {
 			}
 
 		},
-		"required": ["name", "email", "dueDate", "invoiceItems"]
+		"required": ["name", "email", "dueDate", "invoiceItems", "merchantEmail"]
 	};
 
 	var validateCreate = function validateCreate(requestBody) {
@@ -62828,6 +62834,12 @@ module.exports = function (logger) {
 				return "Need to atleast 1 invoice item";
 			}
 		});
+
+		tv4.addFormat('descriptionCheck', function (description, schema) {
+			if (description.length < 1) {
+				return "Description is required";
+			}
+		});
 		tv4.addFormat(tv4formats);
 
 		if (!tv4.validate(requestBody, schema)) {
@@ -62848,11 +62860,11 @@ module.exports = function (logger) {
 	var paramSchema = {
 		"properties": {
 			"merchantEmail": {
-				"type": "string"
+				"type": "string",
+				"format": "email"
 			},
 			"helperText": {
-				"type": "string",
-				"format": "validHelperTxt"
+				"type": "string"
 			}
 
 		},
@@ -62861,12 +62873,8 @@ module.exports = function (logger) {
 
 	var validateGet = function validateGet(requestParams) {
 
-		tv4.addFormat('validHelperTxt', function (helperText, schema) {
-			var regex = new RegExp('^[a-z0-9]+$');
-			if (!regex.test(helperText)) return "Only alphanumeric values allowed";
-		});
-
 		if (!tv4.validate(requestParams, paramSchema)) {
+
 			logger.log('error', tv4.error.message);
 			return {
 				status: 'error',

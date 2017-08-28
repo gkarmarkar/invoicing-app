@@ -57,7 +57,6 @@ export default class InvoiceFormList extends React.Component{
 
 	deleteItemClickHandler(e, index){
 		e.preventDefault();
-		console.log(index);			
 		this.props.removeInvoiceItem(index);
 	}
 
