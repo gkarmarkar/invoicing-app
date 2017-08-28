@@ -3,71 +3,104 @@ import './invoice.scss';
 import React from 'react';
 import InvoiceFormList from '../../components/invoice-form-list/index.jsx';
 import Input from 'react-toolbox/lib/input';
+import Preview from '../../components/preview/index.jsx';
 import {Button, IconButton} from 'react-toolbox/lib/button';
+import Dialog from 'react-toolbox/lib/dialog';
+import Validate from '../../../lib/validate';
+import TypeAheadList from '../../components/invoice-typeahead-list/index.jsx';
 
 export default class Home extends React.Component {
   constructor(props) {
     super(props);
-
-    this.state={
-      name:"",
-      email:"",
-      dueDate:"",
-      total:0.00,
-      invoiceItems:[
-        {
-          description:"",
-          amount:0.00
-        }
-      ],
-      errorTxt:""
-    }
+    this.timeoutHandler = null;
+    this.state= this.getInitialState();
   }
 
-  
-  doSomething(e){
-    e.preventDefault();
+  getInitialState(){
+      return {
+        name:"",
+        email:"",
+        dueDate:"",
+        total:0.00,
+        invoiceItems:[
+          {
+            description:"",
+            amount:0.00
+          }
+        ],
+        message:"",
+        typeAheadItems:[],
+        previewActive: false,
+        invoiceStatus: ""
+      }        
+  }
 
+  doSomething(e){
     var requestBody=this.state;
     requestBody.dueDate=(new Date(requestBody.dueDate)).toISOString();
-    console.log('--========>>>>> ');
+
     $.post("http://localhost:3000/api/v1/invoice/create",requestBody)
-    .done(function(data){//update the UI
+    .done((data) => {//update the UI
+        var state = this.getInitialState();
+        state.invoiceStatus = 'success';
+        state.previewActive = false;
+        state.message = data.message;
+        this.setState(state);
     })
     .fail((err)=>{
       //Update the UI
       var errMsg=err.responseJSON.message.message;
-      console.log("this was errMsg ", errMsg);
       requestBody.errorTxt=errMsg;
-      console.log('Error !!!! ', requestBody.errorTxt);
-      this.setState({"errorTxt":requestBody.errorTxt});
+      this.setState({"message":requestBody.errorTxt,
+                    "invoiceStatus": "error",
+                    "previewActive": false});
          
     });
   } 
+
+  setSelectedTypeAhead(e){
+    this.setState({"email":e.target.textContent,"typeAheadItems":[]});
+
+  }
 
   render() {
     var changeNotifierHandler = (e, index) => {
       this.onChangeHandler(e,index)
     };
-   
+   var infoBoxClass = '';
+
+   if(this.state.invoiceStatus === 'error') {
+      infoBoxClass= 'alert-danger';
+   }else if(this.state.invoiceStatus === 'success') {
+      infoBoxClass= 'alert-success';
+   }
+
     return(
       <div className="container invoice-form">
-        <div className="errorBox">{this.state.errorTxt}</div>
-        <form className="" onSubmit={this.doSomething.bind(this)}>
-          <div className="form-group row">
+      {this.state.message ? 
+        <div className={'infobox ' + infoBoxClass}>
+          <span>{this.state.message}</span>
+        </div>
+        :''
+      }
+        <form className="" onSubmit={this.showPreview.bind(this)}>
+          <div className="form-group row ">
             <label htmlFor="customer-name" className="col-md-2 col-form-label">Name</label>
             <div className="col-md-7">
                <input className="form-control" type="text" id="customer-name" 
-                    name="customer-name" placeholder="Name of customer" 
-                value={this.state.name} onChange={(e)=>{this.onChangeHandler(e)}}/>
+                    name="customer-name" placeholder="Name of customer" autoComplete="off" 
+                value={this.state.name} onChange={(e)=>{this.onChangeHandler(e)}} />
             </div>          
           </div>
 
           <div className="form-group row">
             <label htmlFor="customer-email" className="col-md-2 col-form-label">Email</label>
-            <div className="col-md-7">
-              <input className="form-control" type="email" id="customer-email" name="customer-email" placeholder="Email"
-                value={this.state.email} onChange={(e)=>{this.onChangeHandler(e)}}/>    
+            <div className="col-md-7 pos-relative">
+              <input className="form-control" type="email" id="customer-email" name="customer-email" placeholder="Email" autoComplete="off" 
+                value={this.state.email} onChange={(e)=>{this.onChangeHandler(e)}}/> 
+              {(this.state.typeAheadItems.length>0 && this.state.email.length>0)?
+                <TypeAheadList typeAheadValues={this.state.typeAheadItems} selectedTypeAhead={(e)=>{this.setSelectedTypeAhead(e)}}/>
+                :""}   
             </div>
           </div>
 
@@ -90,13 +123,83 @@ export default class Home extends React.Component {
                 <span>{this.state.total}</span>
             </div>
             <div className="pull-right">
-              <Button label='Send' type="submit" raised primary />
+              <Button label='Send' type='submit' raised primary />
             </div>
           </div>
 
         </form>
+        <Dialog
+          actions={[
+                    { label: "Edit", onClick: (e)=>{ this.setState({previewActive: false})} },
+                    { label: "Confirm", onClick: this.doSomething.bind(this) }
+                  ]}
+          active={this.state.previewActive}
+          onEscKeyDown={this.hidePreview.bind(this)}
+          onOverlayClick={this.hidePreview.bind(this)}
+          title='Review and confirm your invoice'>
+              <Preview invoice={this.state}/>
+            </Dialog>
       </div>
     );
+  }
+
+  getCustomerSuggestions(textChange){
+     var requestBody=this.state;
+    
+    $.get("http://localhost:3000/api/v1/invoice/get?merchantEmail=johndoe@test.com&helperText="+textChange)
+    .done((data)=>{//update the UI
+      var emailList=data.map(function(item){
+        return item.email;
+      });
+     this.setState({"typeAheadItems":emailList});
+    })
+    .fail((err)=>{
+      //Update the UI
+      var errMsg=err.responseJSON.message.message;
+      requestBody.errorTxt=errMsg;
+      this.setState({"errorTxt":requestBody.errorTxt});
+         
+    });
+  }
+
+
+  processChange(query) {
+    if(!!this.timeoutHandler){
+      clearTimeout(this.timeoutHandler);
+    }      
+      this.timeoutHandler = setTimeout(()=>{
+        clearTimeout(this.timeoutHandler);
+        this.getCustomerSuggestions(query);
+      }, 150);    
+  }
+
+  hidePreview(e) {
+    e.preventDefault();
+    this.setState({previewActive: false})
+  }
+
+  prepDataForValidator(data) {
+    data.total = ''+data.total;
+    data.invoiceItems = data.invoiceItems.map((item)=> {
+        item.amount= ''+ item.amount;
+        return item;
+    });
+    return data;
+  }
+
+  showPreview(e) {
+    e.preventDefault();
+    var validator = Validate();
+    var data = this.prepDataForValidator(this.state)
+    var result = validator.validateCreate(data);
+    if(!!result && result.status === 'success') {
+      this.setState({previewActive: true});      
+    }else {
+      this.setState({
+        message: result.details.message,
+        invoiceStatus: 'error'
+      })
+    }
   }
 
   onChangeHandler(e,listIndex){
@@ -108,6 +211,7 @@ export default class Home extends React.Component {
           this.setState({"name":e.target.value});
           break;
         case "customer-email":
+          this.processChange(e.target.value);
           this.setState({"email":e.target.value});
           break;
         case "due-date":

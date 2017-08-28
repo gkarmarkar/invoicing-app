@@ -1,14 +1,26 @@
 //resets
+@import '../../styles/mixins';
+
 html , body {
 	wight: 100%;
-	height: 100%;	
+	height: 100%;
+
+	ul {
+		list-style:none;
+		padding: 0;
+	}
 }
+
 
 
 //bootstrap overrides
 #root .invoice-form {
 	font-size: 1.6rem;
-
+	.infobox {
+		margin-bottom: 3rem;
+		margin-top: 1rem;
+		padding: 2rem;
+	}
 	.form-control {
 		height: 4rem;
 		font-size: 1.5rem;
@@ -19,8 +31,17 @@ html , body {
     		font-weight: normal;    		
 		}
 	}
+	
+	.total-send {
+		margin-right: 2rem;
+	}
+}
 
-	.total {
+.pos-relative {
+	position: relative;	
+}
+
+.total {
 		margin-bottom: 2rem;
 		text-align: right;
 		
@@ -31,15 +52,14 @@ html , body {
 			margin-right: 0.2rem;
 		}
 	}
-	.total-send {
-		margin-right: 2rem;
-	}
-}
 
 @media (min-width: 1200px) {
     .container{
-        max-width: 670px;
+        max-width: 750px;
+        padding: 4rem;
         margin-top: 10rem;
+        border: 1px solid #f1f1f1;
+        @include border-radius(5px);
 
         .form-group label {
     		line-height: 2.5;

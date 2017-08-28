@@ -55,7 +55,7 @@ module.exports = function(logger){
 
 			var invoiceDBHandler=mongoose.getDB();
 			var paramMerchantEmail=req.query.merchantEmail;
-			var paramCustomerEmailQry=new RegExp(".*"+req.query.helperText+".*@");
+			var paramCustomerEmailQry=new RegExp("^"+req.query.helperText+".*@");
 
 		// db.invoices.find({"merchantEmail" : "johndoe@test.com","email":/.*som.*/},{"email":1})	
 	
@@ -63,7 +63,7 @@ module.exports = function(logger){
 		//	res.json(docs);
 		//});
 
-		invoiceDBHandler.find({merchantEmail : paramMerchantEmail,email:paramCustomerEmailQry},{email:1}).exec(function(err,docs){
+		invoiceDBHandler.find({merchantEmail : paramMerchantEmail,email:paramCustomerEmailQry},{email:1}).limit(5).exec(function(err,docs){
 			res.json(docs);
 		});
 

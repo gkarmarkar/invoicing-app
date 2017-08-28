@@ -1,0 +1,17 @@
+.typeahead-list {
+	position: absolute;
+    width: 93%;
+    z-index: 1;
+}
+
+.typeahead-suggestions .row{
+	background: #f1f1f1;
+	border :	1px solid #e1e1e1;
+	cursor : pointer;
+	margin:0;
+	padding: 1rem;
+
+	&:hover {
+		background-color:#c1c1c1;
+	}
+}
