@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/server.js",
-    "watch": "webpack --watch"
+    "watch": "webpack --watch",
+    "build": "webpack"
   },
   "dependencies": {
     "animate.css": "^3.5.2",
@@ -59,5 +60,8 @@
     "webpack": "^3.5.5",
     "webpack-dev-server": "^2.7.1",
     "webpack-node-externals": "^1.6.0"
+  },
+  "engines": {
+   "node": "6.10.2"
   }
 }

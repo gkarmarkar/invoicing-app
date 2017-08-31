@@ -8,90 +8,42 @@ import {Button, IconButton} from 'react-toolbox/lib/button';
 import Dialog from 'react-toolbox/lib/dialog';
 import Validate from '../../../lib/validate';
 import TypeAheadList from '../../components/invoice-typeahead-list/index.jsx';
+import Helper from '../../lib/helper.js';
+import AjaxHelper from '../../lib/ajax.js';
 
 export default class Home extends React.Component {
   constructor(props) {
     super(props);
+    this.helper = Helper();
+    this.ajaxHelper = AjaxHelper();
     this.timeoutHandler = null;
-    this.state= this.getInitialState();
-  }
-
-  getInitialState(){
-      return {
-        name:"",
-        email:"",
-        //this should be coming from a login session or something, hardcoding for now..
-        merchantEmail:"defaultmerchant@test.com",
-        dueDate:"",
-        total:0.00,
-        invoiceItems:[
-          {
-            description:"",
-            amount:0.00
-          }
-        ],
-        message:"",
-        typeAheadItems:[],
-        previewActive: false,
-        invoiceStatus: ""
-      }        
-  }
-
-  doSomething(e){
-    var requestBody=this.state;
-    requestBody.dueDate=(new Date(requestBody.dueDate)).toISOString();
-
-    $.post("http://localhost:3000/api/v1/invoice/create",requestBody)
-    .done((data) => {//update the UI
-        var state = this.getInitialState();
-        state.invoiceStatus = 'success';
-        state.previewActive = false;
-        state.message = data.message;
-        this.setState(state);
-    })
-    .fail((err)=>{
-      //Update the UI
-      var errMsg=err.responseJSON.message.message;
-      requestBody.errorTxt=errMsg;
-      this.setState({"message":requestBody.errorTxt,
-                    "invoiceStatus": "error",
-                    "previewActive": false});
-         
-    });
-  } 
-
-  setSelectedTypeAhead(e){
-    this.setState({"email":e.target.textContent,"typeAheadItems":[]});
-
+    this.state = this.helper.getInitialState();
+    this.createInvoice = this.createInvoice.bind(this);
+    this.addNewInvoiceItem = this.addNewInvoiceItem.bind(this);
+    this.removeInvoiceItem = this.removeInvoiceItem.bind(this);
+    this.setSelectedTypeAhead = this.setSelectedTypeAhead.bind(this);
+    this.onChangeHandler = this.onChangeHandler.bind(this);
+    
   }
 
   render() {
-    var changeNotifierHandler = (e, index) => {
-      this.onChangeHandler(e,index)
-    };
-   var infoBoxClass = '';
-
-   if(this.state.invoiceStatus === 'error') {
-      infoBoxClass= 'alert-danger';
-   }else if(this.state.invoiceStatus === 'success') {
-      infoBoxClass= 'alert-success';
-   }
+   var infoBoxClass = (this.state.invoiceStatus === 'error') ? 'alert-danger' : 'alert-success';   
 
     return(
       <div className="container invoice-form">
-      {this.state.message ? 
-        <div className={'infobox ' + infoBoxClass}>
-          <span>{this.state.message}</span>
-        </div>
-        :''
-      }
+        {this.state.message ? 
+          <div className={'infobox ' + infoBoxClass}>
+            <span>{this.state.message}</span>
+          </div>
+          :''
+        }
         <form className="" onSubmit={this.showPreview.bind(this)}>
           <div className="form-group row ">
             <label htmlFor="customer-name" className="col-md-2 col-form-label">Name</label>
             <div className="col-md-7">
                <input className="form-control" type="text" id="customer-name" 
                     name="customer-name" placeholder="Name of customer" autoComplete="off" 
-                value={this.state.name} onChange={(e)=>{this.onChangeHandler(e)}} />
+                value={this.state.name} onChange={this.onChangeHandler} ref={(input) => { this.focusInput = input}}/>
             </div>          
           </div>
 
@@ -99,9 +51,10 @@ export default class Home extends React.Component {
             <label htmlFor="customer-email" className="col-md-2 col-form-label">Email</label>
             <div className="col-md-7 pos-relative">
               <input className="form-control" type="email" id="customer-email" name="customer-email" placeholder="Email" autoComplete="off" 
-                value={this.state.email} onChange={(e)=>{this.onChangeHandler(e)}}/> 
+                value={this.state.email} onChange={this.onChangeHandler}/>
+
               {(this.state.typeAheadItems.length>0 && this.state.email.length>0)?
-                <TypeAheadList typeAheadValues={this.state.typeAheadItems} selectedTypeAhead={(e)=>{this.setSelectedTypeAhead(e)}}/>
+                <TypeAheadList typeAheadValues={this.state.typeAheadItems} selectedTypeAhead={this.setSelectedTypeAhead}/>
                 :""}   
             </div>
           </div>
@@ -110,14 +63,14 @@ export default class Home extends React.Component {
             <label htmlFor="due-date" className="col-md-2 col-form-label">Due Date</label>
             <div className="col-md-7">
               <input className="form-control" type="date" id="due-date" name="due-date"
-                 value={this.state.dueDate} onChange={(e)=>{this.onChangeHandler(e)}}/>          
+                 value={this.state.dueDate} onChange={this.onChangeHandler}/>          
             </div>
           </div>
 
          <InvoiceFormList list={this.state.invoiceItems} 
-                          addInvoiceItem={this.addInvoiceItem.bind(this)} 
-                          removeInvoiceItem={this.removeInvoiceItem.bind(this)}
-                          changeNotifier={changeNotifierHandler}/>
+                          addInvoiceItem={this.addNewInvoiceItem} 
+                          removeInvoiceItem={this.removeInvoiceItem}
+                          changeNotifier={this.onChangeHandler}/>
           <div className="total-send">
             <div className="total">
                 <strong className="total-text">TOTAL</strong>
@@ -133,7 +86,7 @@ export default class Home extends React.Component {
         <Dialog
           actions={[
                     { label: "Edit", onClick: (e)=>{ this.setState({previewActive: false})} },
-                    { label: "Confirm", onClick: this.doSomething.bind(this) }
+                    { label: "Confirm", onClick: this.createInvoice}
                   ]}
           active={this.state.previewActive}
           onEscKeyDown={this.hidePreview.bind(this)}
@@ -145,54 +98,50 @@ export default class Home extends React.Component {
     );
   }
 
-  getCustomerSuggestions(textChange){
-     var requestBody=this.state;
-    
-    $.get("http://localhost:3000/api/v1/invoice/get?merchantEmail=johndoe@test.com&helperText="+textChange)
-    .done((data)=>{//update the UI
-      var emailList=data.map(function(item){
-        return item.email;
-      });
-     this.setState({"typeAheadItems":emailList});
-    })
-    .fail((err)=>{
-      //Update the UI
-      var errMsg=err.responseJSON.message.message;
-      requestBody.errorTxt=errMsg;
-      this.setState({"errorTxt":requestBody.errorTxt});
-         
+  componentDidMount() {
+    this.focusInput.focus();
+  }
+  createInvoice() {
+     this.ajaxHelper.createInvoice(this.state, (error, newState) => {
+      this.setState(newState);
+    });
+  } 
+
+  setSelectedTypeAhead(e) {
+    this.setState({"email":e.target.textContent,"typeAheadItems":[]});
+  }
+
+  addNewInvoiceItem() {
+    this.setState({"invoiceItems": this.helper.addInvoiceItem(this.state.invoiceItems)});
+  }
+
+  removeInvoiceItem() {
+    var data = this.helper.removeInvoiceItem(this.state.invoiceItems);
+    this.setState({
+        "invoiceItems": data.invoiceItems,
+        "total": data.total
     });
   }
 
-
-  processChange(query) {
+//Typeahead
+  getEmailSuggestion(query) {
     if(!!this.timeoutHandler){
       clearTimeout(this.timeoutHandler);
     }      
       this.timeoutHandler = setTimeout(()=>{
         clearTimeout(this.timeoutHandler);
-        this.getCustomerSuggestions(query);
+         this.ajaxHelper.getCustomerSuggestions(query, (error, emailSuggestionList) => {          
+          this.setState({typeAheadItems: emailSuggestionList})
+        });
       }, 150);    
   }
 
-  hidePreview(e) {
-    e.preventDefault();
-    this.setState({previewActive: false})
-  }
-
-  prepDataForValidator(data) {
-    data.total = ''+data.total;
-    data.invoiceItems = data.invoiceItems.map((item)=> {
-        item.amount= ''+ item.amount;
-        return item;
-    });
-    return data;
-  }
+// Preview controllers
 
   showPreview(e) {
     e.preventDefault();
     var validator = Validate();
-    var data = this.prepDataForValidator(this.state)
+    var data = this.helper.convertAllAmountsToString(this.state)
     var result = validator.validateCreate(data);
     if(!!result && result.status === 'success') {
       this.setState({previewActive: true});      
@@ -204,6 +153,13 @@ export default class Home extends React.Component {
     }
   }
 
+  hidePreview(e) {
+    e.preventDefault();
+    this.setState({previewActive: false})
+  }
+
+// End of preview controllers
+
   onChangeHandler(e,listIndex){
   
     var changedField=e.target.name;
@@ -213,72 +169,22 @@ export default class Home extends React.Component {
           this.setState({"name":e.target.value});
           break;
         case "customer-email":
-          this.processChange(e.target.value);
+          this.getEmailSuggestion(e.target.value);
           this.setState({"email":e.target.value});
           break;
         case "due-date":
           this.setState({"dueDate":e.target.value});
           break;
         case "invoice-description":
-          var modifiedList=this.state.invoiceItems.map((item,index)=>{
-              if(index===listIndex){
-
-                return {"description":e.target.value,
-                        "amount":item.amount};
-              }else{
-                return item;
-              }
-            }); 
-          this.setState({"invoiceItems":modifiedList});
+          this.setState({"invoiceItems": this.helper.UpdateInvoiceItemAtIndex(this.state.invoiceItems, {description: e.target.value}, listIndex)});          
           break;
         case "invoice-amount":
-          var tmpTotal=0;
-          var modifiedList=this.state.invoiceItems.map((item,index)=>{
-             if(index===listIndex){
-              
-              return {
-                "description":item.description,
-                "amount":e.target.value
-              }
-
-             }else{
-              return item;
-             }
-
-          });
-
-          this.setState({
-            "invoiceItems":modifiedList,
-            "total":this.calculateTotal(modifiedList)
+          var updatedList = this.helper.UpdateInvoiceItemAtIndex(this.state.invoiceItems, {amount: e.target.value}, listIndex);
+          this.setState({            
+            "invoiceItems": updatedList,
+            "total":this.helper.calculateTotal(updatedList)
           });
           break;
      }
   }
-
-  calculateTotal(modifiedList){
-      var total=modifiedList.reduce(function(data,value){
-          return data+Number(value.amount);
-      },0);
-      return total;
-    }
-
-  addInvoiceItem(){
-      var tmpArr=this.state.invoiceItems;
-      tmpArr.push({"description":"","amount":0.00});
-      //for updating the state of the child component(adds another list item when + was clicked)
-      this.setState({invoiceItems:tmpArr});
-
-  }
-
-  removeInvoiceItem(indexToRemove){
-    if(this.state.invoiceItems.length>1){
-     var modifiedArr=this.state.invoiceItems;
-     modifiedArr.splice(indexToRemove,1);
-     this.setState({"invoiceItems":modifiedArr,
-                    "total":this.calculateTotal(modifiedArr)
-                    });
-    }
-
-  }
-
 }

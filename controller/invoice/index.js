@@ -57,15 +57,13 @@ module.exports = function(logger){
 			var paramMerchantEmail=req.query.merchantEmail;
 			var paramCustomerEmailQry=new RegExp("^"+req.query.helperText+".*@");
 
-		// db.invoices.find({"merchantEmail" : "johndoe@test.com","email":/.*som.*/},{"email":1})	
-	
-		//invoiceDBHandler.find("{merchantEmail : \"johndoe@test.com\",email: /.*something.*/},{email:1}",function(err,docs){
-		//	res.json(docs);
-		//});
-
-		invoiceDBHandler.find({merchantEmail : paramMerchantEmail,email:paramCustomerEmailQry},{email:1}).limit(5).exec(function(err,docs){
+		console.log('making query');
+		invoiceDBHandler
+		.distinct("email",{merchantEmail : paramMerchantEmail,email:paramCustomerEmailQry},function(err,docs){
+		
 			res.json(docs);
-		});
+			}
+		);
 
 		}else{
 			logger.log('error',resultGet.details);
