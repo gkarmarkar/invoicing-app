@@ -101,6 +101,7 @@ export default class Home extends React.Component {
   componentDidMount() {
     this.focusInput.focus();
   }
+
   createInvoice() {
      this.ajaxHelper.createInvoice(this.state, (error, newState) => {
       this.setState(newState);
@@ -115,8 +116,8 @@ export default class Home extends React.Component {
     this.setState({"invoiceItems": this.helper.addInvoiceItem(this.state.invoiceItems)});
   }
 
-  removeInvoiceItem() {
-    var data = this.helper.removeInvoiceItem(this.state.invoiceItems);
+  removeInvoiceItem(index) {
+    var data = this.helper.removeInvoiceItem(this.state.invoiceItems, index);
     this.setState({
         "invoiceItems": data.invoiceItems,
         "total": data.total
@@ -130,7 +131,8 @@ export default class Home extends React.Component {
     }      
       this.timeoutHandler = setTimeout(()=>{
         clearTimeout(this.timeoutHandler);
-         this.ajaxHelper.getCustomerSuggestions(query, (error, emailSuggestionList) => {          
+         this.ajaxHelper.getCustomerSuggestions(query, (error, emailSuggestionList) => {  
+         console.log("SUGGESTO ",emailSuggestionList);        
           this.setState({typeAheadItems: emailSuggestionList})
         });
       }, 150);    

@@ -57,15 +57,21 @@ module.exports = function(logger){
 			var paramMerchantEmail=req.query.merchantEmail;
 			var paramCustomerEmailQry=new RegExp("^"+req.query.helperText+".*@");
 
-		console.log('making query');
-		invoiceDBHandler
-		.distinct("email",{merchantEmail : paramMerchantEmail,email:paramCustomerEmailQry},function(err,docs){
-		
-			res.json(docs);
-			}
-		);
+			invoiceDBHandler
+			.distinct("email",{merchantEmail : paramMerchantEmail,email:paramCustomerEmailQry},function(err,docs){
+					if(err){
+						res.status(400).send({
+							'status': 'error',
+							'error': err
+						});
+					}else{
+						res.json(docs);
+						}	
+				}
+			);
 
 		}else{
+			//validation error
 			logger.log('error',resultGet.details);
 			res.status(400).send({
 				'status': 'error',

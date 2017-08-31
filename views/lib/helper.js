@@ -33,8 +33,8 @@ export default function() {
     	
     	var modifiedList = invoiceItems.map((item,index) => {
     		var updatedInvoiceItem = {
-    			"description": (updatedItem.description) ? updatedItem.description : item.description,
-    			"amount": (updatedItem.amount) ? updatedItem.amount : item.amount
+    			"description": (updatedItem.description || updatedItem.description === "") ? updatedItem.description : item.description,
+    			"amount": (updatedItem.amount || updatedItem.amount === "") ? updatedItem.amount : item.amount
     		}
             return (index===listIndex) ? updatedInvoiceItem : item;
         });
